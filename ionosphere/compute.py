@@ -302,7 +302,8 @@ class VirtualMachineScaleSetIPConfiguration(ARMObject):
         'privateIPAddressVersion': (SubResource, False),  # Possible values are: 'IPv4' and 'IPv6'
         'applicationGatewayBackendAddressPools': ([SubResource], False),
         'loadBalancerBackendAddressPools': ([SubResource], False),
-        'loadBalancerInboundNatPools': ([SubResource], False)
+        'loadBalancerInboundNatPools': ([SubResource], False),
+        'applicationSecurityGroups': ([SubResource], False)
     }
 
     def to_dict(self):
