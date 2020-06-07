@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from base import ARMObject, ARMProperty, SubResource
 
@@ -542,6 +542,7 @@ class ApplicationGatewayRequestRoutingRule(ARMObject):
         'backendAddressPool': (SubResource, False),
         'backendHttpSettings': (SubResource, False),
         'urlPathMap': (SubResource, False),
+        'redirectConfiguration': (SubResource, False),
     }
     @property
     def rule_type(self) -> str:
@@ -562,6 +563,10 @@ class ApplicationGatewayRequestRoutingRule(ARMObject):
     @property
     def url_path_map(self) -> SubResource:
         return self.properties['urlPathMap']
+
+    @property
+    def redirect_configuration(self) -> Optional[SubResource]:
+        return self.properties.get('redirectConfiguration')
 
 
 class AutoScaleConfiguration(ARMProperty):
@@ -622,6 +627,25 @@ class ApplicationGatewayIdentity(ARMProperty):
     }
 
 
+class ApplicationGatewayRedirectConfiguration(ARMObject):
+    props = {
+        'targetListener': (SubResource, False),
+        'redirectType': (str, False), # Permanent / Found / SeeOther / Temporary
+        'targetUrl': (str, False),
+        'includePath': (bool, False),
+        'includeQueryString': (bool, False),
+        'requestRoutingRules': ([SubResource], False),
+        'urlPathMaps': ([SubResource], False),
+        'pathRules': ([SubResource], False)
+    }
+
+    def validate(self):
+        redirect_type = self.properties.get('redirectType')
+        if redirect_type and redirect_type not in ['Permanent', 'Found', 'SeeOther', 'Temporary']:
+            raise ValueError('ApplicationGateway->redirectConfigurations->redirectType must be either "Permanent", '
+                             '"Found", "SeeOther", or "Temporary".')
+
+
 class ApplicationGateway(ARMObject):
     resource_type = 'Microsoft.Network/applicationGateways'
     apiVersion = '2018-10-01'
@@ -642,7 +666,8 @@ class ApplicationGateway(ARMObject):
         'autoscaleConfiguration': (AutoScaleConfiguration, False),
         'urlPathMaps': ([ApplicationGatewayUrlPathMap], False),
         'probes': ([ApplicationGatewayHealthProbe], False),
-        'sslCertificates': ([ApplicationGatewaySslCertificate], False)
+        'sslCertificates': ([ApplicationGatewaySslCertificate], False),
+        'redirectConfigurations': ([ApplicationGatewayRedirectConfiguration], False)
     }
 
     def ref_gateway_ip_configuration(self, value: ApplicationGatewayIPConfiguration) -> SubResource:
@@ -671,6 +696,9 @@ class ApplicationGateway(ARMObject):
 
     def ref_ssl_certificate(self, value: ApplicationGatewaySslCertificate) -> SubResource:
         return SubResource(id=f"[resourceId('{self.resource_type}/sslCertificates', '{self.title}', '{value.title}')]")
+
+    def ref_redirect_configuration(self, value: ApplicationGatewayRedirectConfiguration) -> SubResource:
+        return SubResource(id=f"[resourceId('{self.resource_type}/redirectConfigurations', '{self.title}', '{value.title}')]")
 
     @property
     def gateway_ip_configurationsn(self) -> List[ApplicationGatewayIPConfiguration]:
@@ -712,4 +740,6 @@ class ApplicationGateway(ARMObject):
     def ssl_certificates(self) -> List[ApplicationGatewaySslCertificate]:
         return self.properties['sslCertificates']
 
-
+    @property
+    def redirect_configurations(self) -> List[ApplicationGatewayRedirectConfiguration]:
+        return self.properties['redirectConfigurations']
