@@ -50,7 +50,7 @@ class ManagedDiskParameters(ARMProperty):
 
     def validate(self):
         if 'storageAccountType' in self.properties:
-            if self.properties['storageAccountType'] not in ['Standard_LRS', 'Premium_LRS']:
+            if self.properties['storageAccountType'] not in ['Standard_LRS', 'Premium_LRS', 'StandardSSD_LRS', 'UltraSSD_LRS']:
                 raise ValueError('storageAccountType - Possible values are: Standard_LRS or Premium_LRS')
 
 
@@ -69,11 +69,25 @@ class OsDisk(ARMProperty):
     }
 
 
+# https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachines#datadisk-object
+class DataDisk(ARMProperty):
+    props = {
+        'lun': (int, True),
+        'createOption': (str, True),    # Empty / Attach / FromImage
+        'name': (str, False),
+        'vhd': (VirtualHardDisk, False),
+        'image': (VirtualHardDisk, False),
+        'caching': (str, False),        # None / ReadOnly / ReadWrite
+        'diskSizeGB': (int, False),
+        'managedDisk': (ManagedDiskParameters, False)
+    }
+
+
 class StorageProfile(ARMProperty):
     props = {
         'imageReference': (ImageReference, False),
-        'osDisk': (OsDisk, False)
-        # 'dataDisks':  # todo add support
+        'osDisk': (OsDisk, False),
+        'dataDisks':  ([DataDisk], False),
     }
 
 
@@ -149,7 +163,7 @@ class BootDiagnostics(ARMProperty):
 class VirtualMachineIdentity(ARMProperty):
     props = {
         'type': (str, True),
-        'identityIds': (list, False)  # List[str]
+        'userAssignedIdentities': (dict, False)  # dict
     }
 
 
@@ -190,7 +204,7 @@ class VirtualMachineExtension(ARMObject):
 
 class VirtualMachine(ARMObject):
     resource_type = 'Microsoft.Compute/virtualMachines'
-    apiVersion = "2017-12-01"
+    apiVersion = "2019-12-01"
     location = True
 
     props = {
