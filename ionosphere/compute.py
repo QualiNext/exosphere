@@ -266,6 +266,7 @@ class VirtualMachineScaleSetOSDisk(ARMProperty):
         'name': (str, False),
         'caching': (str, False),
         'createOption': (str, True),
+        'diskSizeGB': (int, False),  # todo add validations on max size
         'osType': (str, False),
         'image': (VirtualHardDisk, False),
         'vhdContainers': (list, False),
@@ -385,7 +386,7 @@ class VirtualMachineScaleSetSku(ARMProperty):
 # https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/virtualmachinescalesets#microsoftcomputevirtualmachinescalesets-object
 class VirtualMachineScaleSets(ARMObject):
     resource_type = 'Microsoft.Compute/virtualMachineScaleSets'
-    apiVersion = "2017-12-01"
+    apiVersion = "2019-12-01"
     location = True
 
     props = {
